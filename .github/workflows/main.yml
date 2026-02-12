@@ -1,0 +1,25 @@
+#!/bin/bash
+
+DEPLOYPATH=/home/coopecab/api.coopecabk.com/
+
+rsync -av --delete --exclude='.git' /home/coopecab/repositories/api_abk/ $DEPLOYPATH
+
+cd $DEPLOYPATH
+
+source /home/coopecab/virtualenv/api_abk/3.10/bin/activate
+
+pip install -r requirements.txt
+
+python manage.py migrate
+
+python manage.py migrate users
+
+python manage.py migrate membres
+
+python manage.py migrate caisse
+
+python manage.py migrate credits
+
+python manage.py collectstatic --noinput
+
+touch tmp/restart.txt
