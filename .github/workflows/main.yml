@@ -2,7 +2,7 @@
 
 DEPLOYPATH=/home/coopecab/api.coopecabk.com/
 
-rsync -av --delete --exclude='.git' /home/coopecab/repositories/api_abk/ $DEPLOYPATH
+rsync -av --delete --exclude='.git' /home/coopecab/api.coopecabk.com/ $DEPLOYPATH
 
 cd $DEPLOYPATH
 
