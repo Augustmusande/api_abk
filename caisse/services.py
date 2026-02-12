@@ -28,16 +28,23 @@ def calculer_interet_credit(credit):
     """
     return (credit.montant * credit.taux_interet) / Decimal('100')
 
-def calculer_interets_tous_credits():
+def calculer_interets_tous_credits(periode_annee=None):
     """
     Calcule les intérêts de tous les crédits.
+    
+    Args:
+        periode_annee (int, optional): Année pour filtrer les crédits par date_octroi. Si None, calcule sur tous les crédits.
     
     Returns:
         dict: Dictionnaire avec les résultats des calculs
     """
     # Utiliser only() pour ne récupérer que les champs nécessaires et éviter les erreurs de champs inexistants
     # Cela évite que Django essaie d'accéder à des champs qui n'existent pas dans la base de données
-    credits = Credit.objects.only('id', 'montant', 'taux_interet', 'membre_id', 'client_id').select_related('membre', 'client')
+    credits = Credit.objects.only('id', 'montant', 'taux_interet', 'membre_id', 'client_id', 'date_octroi').select_related('membre', 'client')
+    
+    # Filtrer par année si periode_annee est spécifié
+    if periode_annee is not None:
+        credits = credits.filter(date_octroi__year=periode_annee)
     
     # Intérêts par crédit
     interets_par_credit = []
@@ -120,7 +127,7 @@ def calculer_frais_gestion(pourcentage=20, periode_annee=None):
     from membres.models import FraisAdhesion
     
     # Calculer d'abord les intérêts totaux
-    resultats_interets = calculer_interets_tous_credits()
+    resultats_interets = calculer_interets_tous_credits(periode_annee=periode_annee)
     interet_total_global = Decimal(str(resultats_interets['interet_total_global']))
     
     # Calculer les frais de gestion sur l'intérêt total global
@@ -612,7 +619,7 @@ def repartir_interets_aux_membres(pourcentage_frais_gestion=20, periode_mois=Non
     - interet_net_a_repartir = interet_total_global - frais_gestion_total_global
     
     IMPORTANT : 
-    - Les intérêts et frais de gestion sont calculés globalement (tous les crédits)
+    - Les intérêts et frais de gestion sont filtrés par année si periode_annee est spécifié, sinon calculés sur tous les crédits
     - Les apports des membres sont filtrés par période (mois/année) pour la répartition
     - Si periode_mois n'est pas spécifié mais periode_annee l'est, calcule le total de toute l'année
     - Si un membre n'a pas d'apports dans la période, il aura 0 comme apports et proportion
@@ -635,9 +642,9 @@ def repartir_interets_aux_membres(pourcentage_frais_gestion=20, periode_mois=Non
         aujourd_hui = date.today()
         periode_annee = aujourd_hui.year
     
-    # 1. Calculer les intérêts et frais de gestion (globaux - tous les crédits)
-    resultats_interets = calculer_interets_tous_credits()
-    resultats_frais = calculer_frais_gestion(pourcentage_frais_gestion)
+    # 1. Calculer les intérêts et frais de gestion (filtrés par année si periode_annee est spécifié)
+    resultats_interets = calculer_interets_tous_credits(periode_annee=periode_annee)
+    resultats_frais = calculer_frais_gestion(pourcentage_frais_gestion, periode_annee=periode_annee)
     
     interet_total_global = Decimal(str(resultats_interets['interet_total_global']))
     frais_gestion_total_global = Decimal(str(resultats_frais['frais_gestion_total_global']))
