@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DEPLOYPATH=/home/coopecab/api.coopecabk.com/
+DEPLOYPATH=/api.coopecabk.com/
 
-rsync -av --delete --exclude='.git' /home/coopecab/api.coopecabk.com/ $DEPLOYPATH
+rsync -av --delete --exclude='.git' /api.coopecabk.com/ $DEPLOYPATH
 
 cd $DEPLOYPATH
 
